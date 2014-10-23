@@ -1,0 +1,47 @@
+* {
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+* iframe {
+  border: none !important;
+}
+
+// Mixin
+.clearfix() {
+  &:before,
+  &:after {
+    content: " ";
+    display: table;
+  }
+  &:after {
+    clear: both;
+  }
+}
+
+body{
+  font: 18px @light, sans-serif;
+  color: #000;
+  -webkit-font-smoothing: subpixel-antialiased !important;
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility:    hidden;
+  -ms-backface-visibility:     hidden;
+  padding: 0;
+  min-width: 1200px;
+}
+
+h1,h2,h3,h4,h5,h6,b {
+  margin: 0;
+  font-family: @bold;
+}
+input, textarea, label, a{
+  font-family: @light;
+}
+.container {
+    width: 1200px !important;
+}
+.page-container {
+  width: 100%;
+  min-width: 1200px;
+  overflow: hidden;
+}
