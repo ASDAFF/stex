@@ -42,6 +42,7 @@ class NewsList extends CBitrixComponent
         'PREVIEW_TEXT',
         'PREVIEW_PICTURE',
         'DETAIL_PAGE_URL',
+        'IBLOCK_SECTION_ID',
         'PROPERTY_MAKE',
         'PROPERTY_MODEL',
         'PROPERTY_YEAR',
@@ -102,15 +103,35 @@ class NewsList extends CBitrixComponent
                 'IBLOCK_ID' => self::IBLOCK_ID,
                 'CODE' => $this->arParams['SECTION_CODE']
                 ], false, [
-                'ID', 'CODE', 'NAME', 'DESCRIPTION'
+                'ID', 'CODE', 'NAME', 'DESCRIPTION', 'UF_NO_PHOTO'
                 ])->Fetch();
             $this->arResult['section'] = array(
                 'id' => $section['ID'],
                 'code' => $section['CODE'],
                 'description' => $section['DESCRIPTION'],
-                'name' => $section['NAME']
+                'name' => $section['NAME'],
+                'no_photo' => CFile::GetPath($section['UF_NO_PHOTO'])
                 );
             $APPLICATION->AddChainItem($this->arResult['section']['name'], '');
+        }
+
+        $sectionsFilter = [
+            'IBLOCK_ID' => self::IBLOCK_ID,
+        ];
+        if ($this->arParams['SECTION_CODE']) {
+            $sectionsFilter['CODE'] = $this->arParams['SECTION_CODE'];
+        }
+        $rs = CIBlockSection::GetList(false, $sectionsFilter, false, [
+            'ID', 'CODE', 'NAME', 'DESCRIPTION', 'UF_NO_PHOTO'
+            ]);
+        while ($section = $rs->Fetch()) {
+            $this->arResult['catalogSections'][$section['ID']] = array(
+                'id' => $section['ID'],
+                'code' => $section['CODE'],
+                'description' => $section['DESCRIPTION'],
+                'name' => $section['NAME'],
+                'no_photo' => CFile::GetPath($section['UF_NO_PHOTO'])
+                );
         }
         if (isset($_GET['filter']['make']) && strpos($_GET['filter']['make'], self::SELECT_DEFAULT) === false) {
             $this->arParams['filter']['make'] = $_GET['filter']['make'];
@@ -148,6 +169,9 @@ class NewsList extends CBitrixComponent
         if ($this->arParams['filter']['make']) {
             $filter['PROPERTY_MAKE'] = $this->arResult['filter']['makes'][$this->arParams['filter']['make']]['id'];
         }
+        if ($this->arParams['filter']['year']) {
+            $filter['PROPERTY_YEAR'] = $this->arParams['filter']['year'];
+        }
         if ($this->arParams['SECTION_CODE']) {
             $section = CIBlockSection::GetList(false, [
                 'IBLOCK_ID' => self::IBLOCK_ID,
@@ -156,6 +180,22 @@ class NewsList extends CBitrixComponent
                 'ID', 'CODE', 'NAME', 'DESCRIPTION'
                 ])->Fetch();
             $filter['SECTION_ID'] = $section['ID'];
+        }
+        $filterFilter = [
+        'IBLOCK_ID' => self::IBLOCK_ID,
+        'ACTIVE' => 'Y'
+        ];
+        if ($this->arParams['filter']['make']) {
+            $filterFilter['PROPERTY_MAKE'] = $this->arResult['filter']['makes'][$this->arParams['filter']['make']]['id'];
+        }
+        if ($this->arParams['filter']['model']) {
+            $filterFilter['PROPERTY_MODEL'] = $this->arResult['filter']['models'][$this->arParams['filter']['model']]['id'];
+        }
+        $rs = CIBlockElement::GetList(false, $filterFilter, false, false, [
+            'PROPERTY_YEAR'
+            ]);
+        while ($y = $rs->Fetch()) {
+            $this->arResult['filter']['year'][$y['PROPERTY_YEAR_VALUE']] = $y['PROPERTY_YEAR_VALUE'];
         }
         return $filter;
     }
@@ -218,6 +258,7 @@ class NewsList extends CBitrixComponent
         $x = array(
             'id' => $item->field('ID'),
             'iblockId' => $item->field('IBLOCK_ID'),
+            'section' => $item->field('IBLOCK_SECTION_ID'),
             'anounce' => $item->field('PREVIEW_TEXT'),
             'picture' => $item->src('PREVIEW_PICTURE'),
             'name' => $item->field('NAME'),
@@ -233,9 +274,9 @@ class NewsList extends CBitrixComponent
             'shopLink' => $item->propValue('SHOP_LINK'),
             'url' => $item->field('DETAIL_PAGE_URL')
             );
-        if (!in_array($x['year'], $this->arResult['filter']['year'])) {
-            $this->arResult['filter']['year'][] = $x['year'];
-        }
+        // if (!in_array($x['year'], $this->arResult['filter']['year'])) {
+        //     $this->arResult['filter']['year'][] = $x['year'];
+        // }
         return $x;
     }
 

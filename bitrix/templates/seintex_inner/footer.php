@@ -1,4 +1,17 @@
 <?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();?>
+                <?if (strpos($APPLICATION->GetCurDir(), 'catalog') === false) : ?>
+                  <div class="b-clients">
+                    <div class="container">
+                      <div class="heading">
+                        <h2>Клиенты и партнеры</h2>
+                      </div>
+                      <?$APPLICATION->IncludeComponent('tesset:news.list', 'partners', array(
+                              'IBLOCK_ID' => 12,
+                              'SORT' => ['NAME' => 'ASC']
+                          ));?>
+                    </div>
+                  </div>
+                <?endif?>
                 </div>
             </div>
         </div>

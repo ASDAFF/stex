@@ -7,24 +7,41 @@
     <div class="row">
         <div class="col-xs-6">
             <ul class="catalog-item__large-photo js-product-large-photo">
-                <?foreach ($item['fancybox'] as $photo) : ?>
-                <li class="slide">
-                    <a href="<?=$photo['normal']['src']?>" class="popup" data-fancybox-group="item-large-photo">
-                        <img src="<?=$photo['thumb']['medium']['src']?>" alt="">
-                    </a>
-                </li>
-                <?endforeach;?>
+                <?if (!$item['fancybox']) : ?>
+                    <li class="slide">
+                        <a href="<?=$arResult['section']['no_photo']?>" class="popup" data-fancybox-group="item-large-photo">
+                            <img src="<?=$arResult['section']['no_photo']?>" alt="">
+                        </a>
+                    </li>
+                <?else : ?>
+                    <?foreach ($item['fancybox'] as $photo) : ?>
+                    <li class="slide">
+                        <a href="<?=$photo['normal']['src']?>" class="popup" data-fancybox-group="item-large-photo">
+                            <img src="<?=$photo['thumb']['medium']['src']?>" alt="">
+                        </a>
+                    </li>
+                    <?endforeach;?>
+                <?endif;?>
             </ul>
             <div class="catalog-item__small-photo js-product-small-photo">
-                <?foreach ($item['fancybox'] as $index => $photo) :?>
-                    <div class="slide <?if ($index == 0) : ?>active<?endif?>">
-                        <img src="<?=$photo['thumb']['small']['src']?>" alt="">
+                <?if (!$item['fancybox']) : ?>
+                    <div class="slide active">
+                        <img src="<?=$arResult['section']['no_photo']?>" alt="">
                     </div>
-                <?endforeach;?>
+                <?else : ?>
+                    <?foreach ($item['fancybox'] as $index => $photo) :?>
+                        <div class="slide <?if ($index == 0) : ?>active<?endif?>">
+                            <img src="<?=$photo['thumb']['small']['src']?>" alt="">
+                        </div>
+                    <?endforeach;?>
+                <?endif;?>
             </div>
         </div>
         <div class="col-xs-6">
             <div class="item-info">
+                <div class="item-info-list item-info__height">
+                    <span>Артикул:</span> <?=$item['articul']?>
+                </div>
                 <div class="item-info-list item-info__height">
                     <span>Тип:</span> <a href="<?=$item['section']['SECTION_PAGE_URL']?>" title=""><?=$item['section']['NAME']?></a>
                 </div>

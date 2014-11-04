@@ -4,6 +4,10 @@
 		"selected_items":
 		[
 			[
+				"DESC",
+				"DESCRIPTION"
+			],
+			[
 				"fa",
 				"fancybox"
 			],
@@ -84,18 +88,32 @@
 	"buffers":
 	[
 		{
-			"file": "bitrix/components/tesset/news.item/class.php",
+			"contents": "<?\nif (!defined(\"B_PROLOG_INCLUDED\") || B_PROLOG_INCLUDED !== true)\n    die();\n\nCBitrixComponent::includeComponentClass(\"component.model:item\");\n\n/**\n* News list\n* \n* @author Roman Morozov <tesset.studio@gmail.com>\n* @version 1.0\n*/\nclass FilterCatalog extends CBitrixComponent \n{\n\n    const IBLOCK_ID = 9;\n\n    /**\n     * Изначальное значение сортировки\n     * @var array\n     */\n    private $sort = array(\n        'DATE_CREATE' => 'DESC'\n        );\n\n    /**\n     * Поля для выбора основных элементов\n     * @var array\n     */\n    private $select = array(\n        'ID',\n        'IBLOCK_ID',\n        'NAME',\n        'PREVIEW_PICTURE',\n        'PREVIEW_TEXT',\n        'DATE_CREATE',\n        'DETAIL_PAGE_URL',\n        );\n\n    /**\n     * Параметры для Битриксовой навигации\n     * @var array\n     */\n    private $navParams = array();\n\n    /**\n     * Если не знаешь что за метод, дальше не смотри\n     */\n    public function executeComponent() \n    {\n        if (false === $this->Initialize()) {\n            return false;\n        }\n\n        global $USER;\n        $cache = $this->navParams . $arNavigation . bitrix_sessid_get() . $USER->GetID();\n        \n        if ($this->startResultCache(0, $cache)) {\n            $this->arResult[\"items\"] = $this->GetItems();\n            $this->includeComponentTemplate();\n        }\n    }\n\n    /**\n     * Initialize main component parameters\n     */\n    public function Initialize() {\n        if (!CModule::IncludeModule(\"iblock\")) {\n            return false;\n        }\n        if (!$this->arParams[\"IBLOCK_ID\"]) {\n            $this->arParams[\"IBLOCK_ID\"] = self::IBLOCK_ID; \n        }\n        $this->navParams = array(\n            \"nPageSize\" => $this->arParams[\"ITEMS_COUNT\"],\n        );\n\n        return true;\n    }\n\n    /**\n     * Формирование стандартного фильтра.\n     * @return array Стандартный фильтр\n     */\n    private function filter() \n    {\n        $filter = array(    \n            'IBLOCK_ID' => $this->arParams['IBLOCK_ID'],\n            'ACTIVE' => 'Y'\n        );\n        return $filter;\n    }\n\n    /**\n     * Получение полностью сформированного списка необходимых элементов. <br/>\n     * Зависит от self::<b>composeItem(</i>Item</i> instance)</b>\n     * @return array Список сформированных элементов\n     */\n    private function GetItems() \n    {\n        return $this->data(CIBlockElement::GetList(\n            $this->sort, \n            $this->filterEx(),\n            false,\n            false,\n            $this->select\n        ));\n\n    }\n\n    /**\n     * Обработчик результат. Вносим изменения при необходимости\n     * @param  CDBResult $rsItems Выборка основного массива элементов\n     * @return array              Основной массив элементов\n     */\n    private function data($rsItems) {\n        while ($item = $rsItems->GetNext()) {\n            $items[] = $this->composeItem(new Item($item));\n        }\n        return $items;\n    }\n\n    // --------- ITEM LOGIC -------------- //\n\n    /**\n     * Расширенный фильтр для основного GetList() элементов\n     * @return array \n     */\n    private function filterEx() \n    {\n        $filterEx = false; // Почему? потому что бля (см. стандартный класс для элементов)\n        $filter = (false === $filterEx) ? $this->filter() : array_merge($this->filter(), $filterEx);\n        return $filter;\n    }\n\n    \n    /**\n     * Формирует данные об основном элементе\n     * @param  Item   $item Item instance\n     * @return array       Данные об элменте\n     */\n    private function composeItem(Item $item) \n    {\n        $x = array(\n            'id' => $item->field('ID'),\n            'name' => $item->field('NAME'),\n            'url' => $item->field('DETAIL_PAGE_URL'),\n            'anounce' => $item->field('PREVIEW_TEXT'),\n            'picture' => $item->src('PREVIEW_PICTURE'),\n            'dateCreated' => FormatDate(\"d.m.Y\", MakeTimeStamp($item->field('DATE_CREATE')))\n            );\n        return $x;\n    }\n}\n",
+			"file": "bitrix/components/tesset/catalog.filter/class.php",
+			"file_size": 4597,
+			"file_write_time": 130585613318168680,
 			"settings":
 			{
-				"buffer_size": 5106,
+				"buffer_size": 3899,
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"file": "bitrix/components/tesset/news.item/templates/.default/template.php",
+			"contents": "<?include $_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/include.php';?>\n\n<?\nCModule::IncludeModule('iblock');\n\n$rsMake = CIBlockSection::GetList([\n	'SORT' => 'ASC'\n	], [\n	'IBLOCK_ID' => 9,\n	'ACTIVE' => 'Y',\n	'DEPTH_LEVEL' => 1\n	], false, [\n	'NAME', 'CODE'\n	]);\n\nwhile ($make = $rsMake->Fetch()) {\n	$result['makes'][$make['CODE']] = [\n		'name' => $make['NAME'],\n		'id' => $make['ID']\n	];\n}\n\nif (isset($_POST['make'])) {\n	$rsModel = CIBlockSection::GetList([\n		'SORT' => 'ASC'\n		], [\n		'IBLOCK_ID' => 9,\n		'ACTIVE' => 'Y',\n		'SECTION_ID' => $result['makes'][$_POST['make']]['ID']\n		], false, [\n		'NAME', 'CODE'\n		]);\n\n	while ($model = $rsModel->Fetch()) {\n		$result['makes'][$model['CODE']] = $model['NAME'];\n	}	\n}\n\nif (isset($_POST['make']) && isset($_POST['model'])) {\n	$rsItem = CIBlocekElement::GetList([\n		'PROPERTY_YEAR' => 'DESC'\n		], [\n		'IBLOCK_ID' => 9,\n		'ACTIVE' => 'Y',\n		'PROPERTY_MAKE' => $_POST['make'],\n		'PROPERTY_MODEL' => $_POST['model']\n		], false, [\n		'PROPERTY_YEAR'\n		]);\n	while ($item = $rsItem->Fetch()) {\n		$result['years'][$item['PROPERTY_YEAR']] = $item['PROPERTY_YEAR'];\n	}\n}\n\n$APPLICATION->IncludeComponent('tesset:catalog.filter', '', [\n	'MAKES' => $result['makes'],\n	'MODELS' => $result['models'],\n	'YEARS' => $result['years'], \n	]);",
+			"file": "ajax/filter.ajax.php",
+			"file_size": 1202,
+			"file_write_time": 130587911661413805,
 			"settings":
 			{
-				"buffer_size": 1186,
+				"buffer_size": 1268,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "bitrix/components/tesset/catalog.filter/.parameters.php",
+			"settings":
+			{
+				"buffer_size": 1145,
 				"line_ending": "Windows"
 			}
 		},
@@ -103,40 +121,15 @@
 			"file": "index.php",
 			"settings":
 			{
-				"buffer_size": 13215,
+				"buffer_size": 10315,
 				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "page_elements/header.php",
-			"settings":
-			{
-				"buffer_size": 6112,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "bitrix/templates/.default/components/bitrix/menu/top_2level/template.php",
-			"settings":
-			{
-				"buffer_size": 2940,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"contents": "1. Подбор на главной\n2. Клиенты\n3. Включаемые области\n4. Левое меню + продукция компании\n5. Свойства категории в карточке\n6. Привязанные товары на главной.\n7. Поиск\n",
-			"settings":
-			{
-				"buffer_size": 165,
-				"line_ending": "Unix",
-				"name": "1. Подбор на главной"
 			}
 		}
 	],
 	"build_system": "",
 	"command_palette":
 	{
-		"height": 119.0,
+		"height": 392.0,
 		"selected_items":
 		[
 			[
@@ -156,7 +149,7 @@
 				"Package Control: Add Channel"
 			]
 		],
-		"width": 449.0
+		"width": 575.0
 	},
 	"console":
 	{
@@ -179,96 +172,103 @@
 	[
 		"/media/roman/SERVER/Projects/SeiNtex",
 		"/media/roman/SERVER/Projects/SeiNtex/bitrix",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/component.model/abstractItem",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/component.model/item",
+		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components",
 		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.element/templates/.default",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.section.list/templates",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.section.list/templates/.default",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.section.list/templates/full",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/news.item/templates/.default",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/news.list",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/news.list/templates",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/news.list/templates/.default",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/news.list/templates/full",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/news.list/templates/partners",
+		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.element/templates",
+		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.filter",
 		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/.default",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/.default/components",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/.default/components/bitrix",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/.default/components/bitrix/menu",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/.default/components/bitrix/menu/top_2level",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/seintex_inner",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/seintex_inner/page_templates",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/seintex_inner/page_templates/forum",
 		"/media/roman/SERVER/Projects/SeiNtex/catalog",
-		"/media/roman/SERVER/Projects/SeiNtex/markup",
-		"/media/roman/SERVER/Projects/SeiNtex/markup/about",
-		"/media/roman/SERVER/Projects/SeiNtex/markup/catalog/setka/tovar",
-		"/media/roman/SERVER/Projects/SeiNtex/markup/news/single",
-		"/media/roman/SERVER/Projects/SeiNtex/page_elements"
+		"/media/roman/SERVER/Projects/SeiNtex/include"
 	],
 	"file_history":
 	[
+		"/media/roman/SERVER/Projects/SeiNtex/include/index.about.slide5.php",
+		"/media/roman/SERVER/Projects/SeiNtex/include/index.about.php",
+		"/media/roman/SERVER/Projects/SeiNtex/include/index.about.slide4.php",
+		"/media/roman/SERVER/Projects/SeiNtex/include/index.about.slide2.php",
+		"/media/roman/SERVER/Projects/SeiNtex/include/index.about.slide3.php",
+		"/media/roman/SERVER/Projects/SeiNtex/include/index.about.slide1.php",
+		"/media/roman/SERVER/Projects/SeiNtex/include/index.top.slide4.php",
+		"/media/roman/SERVER/Projects/SeiNtex/include/index.top.slide3.php",
+		"/media/roman/SERVER/Projects/SeiNtex/include/index.top.slide1.php",
+		"/media/roman/SERVER/Projects/SeiNtex/include/index.top.slide2.php",
+		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.filter/.description.php",
+		"/media/roman/SERVER/Projects/SeiNtex/index.php",
+		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/news.list/templates/full/template.php",
+		"/media/roman/SERVER/Projects/SeiNtex/page_elements/header.php",
+		"/media/roman/SERVER/Projects/SeiNtex/include/header.shop.button.php",
+		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/seintex_index/footer.php",
+		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/seintex_inner/footer.php",
+		"/media/roman/SERVER/Projects/SeiNtex/include/footer.social.php",
+		"/media/roman/SERVER/Projects/SeiNtex/include/footer.copy.php",
+		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.element/class.php",
+		"/media/roman/SERVER/Projects/SeiNtex/page_elements/sidebar.php",
+		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.list/templates/.default/template.php",
+		"/media/roman/SERVER/Projects/SeiNtex/css/style.css",
+		"/media/roman/SERVER/Projects/SeiNtex/catalog/index.php",
+		"/media/roman/SERVER/Projects/SeiNtex/include/catalog.text.php",
+		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.element/templates/.default/template.php",
+		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/.default/components/bitrix/menu/left/template.php",
+		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/news.list/class.php",
+		"/media/roman/SERVER/Projects/SeiNtex/sftp-config.json",
+		"/media/roman/SERVER/Projects/SeiNtex/include/footer.address.piter.php",
+		"/media/roman/SERVER/Projects/SeiNtex/include/footer.address.moscow.php",
+		"/media/roman/SERVER/Projects/SeiNtex/include/footer.email.php",
+		"/media/roman/SERVER/Projects/SeiNtex/include/footer.about.company.php",
+		"/media/roman/SERVER/Projects/SeiNtex/include/footer.address.php",
 		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/news.list/templates/partners/template.php",
+		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.list/class.php",
+		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/.default/components/bitrix/system.pagenavigation/seintex/template.php",
+		"/tmp/fz3temp-1/component.php",
+		"/media/roman/SERVER/Projects/SeiNtex/press-center/index.php",
+		"/tmp/fz3temp-1/template 4.php",
+		"/tmp/fz3temp-1/template 3.php",
+		"/tmp/fz3temp-1/template 2.php",
+		"/tmp/fz3temp-1/template.php",
+		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/.default/components/bitrix/breadcrumb/seintex/template.php",
+		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/seintex_inner/header.php",
+		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/.default/components/bitrix/menu/top_2level/template.php",
+		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/news.item/class.php",
+		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/news.item/templates/.default/template.php",
 		"/media/roman/SERVER/Projects/SeiNtex/urlrewrite.php",
 		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/news.item/.description.php",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.list/class.php",
 		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.section.list/class.php",
 		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.section.list/templates/.default/template.php",
-		"/media/roman/SERVER/Projects/SeiNtex/index.php",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/news.list/class.php",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/news.list/templates/full/template.php",
 		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/news.list/templates/.default/template.php",
-		"/media/roman/SERVER/Projects/SeiNtex/page_elements/sidebar.php",
 		"/media/roman/SERVER/Projects/SeiNtex/.top.menu.php",
 		"/media/roman/SERVER/Projects/SeiNtex/.top.menu_ext.php",
 		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.section.list/templates/full/template.php",
 		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/news.list/.description.php",
 		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.section.list/.description.php",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.element/class.php",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.element/templates/.default/template.php",
 		"/media/roman/SERVER/Projects/SeiNtex/markup/catalog/setka/tovar/index.php",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.list/templates/.default/template.php",
 		"/media/roman/SERVER/Projects/SeiNtex/catalog/item.php",
 		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.element/.description.php",
 		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/catalog.element/.parameters.php",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/seintex_inner/footer.php",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/seintex_inner/header.php",
-		"/media/roman/SERVER/Projects/SeiNtex/catalog/index.php",
 		"/media/roman/SERVER/Projects/SeiNtex/markup/catalog/setka/index.php",
 		"/media/roman/SERVER/Projects/SeiNtex/js/min/script.min.js",
-		"/media/roman/SERVER/Projects/SeiNtex/sftp-config.json",
-		"/tmp/fz3temp-1/component.php",
-		"/tmp/fz3temp-1/template.php",
 		"/media/roman/SERVER/Projects/SeiNtex/js/script.js",
 		"/home/roman/Downloads/CocoDesign/classy/assets/js/pages/other-charts.js",
 		"/home/roman/Downloads/CocoDesign/classy/other-charts.html",
 		"/tmp/fz3temp-1/index.php",
 		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/seintex_inner/lang/ru/description.php",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/.default/components/bitrix/menu/top_2level/template.php",
 		"/media/roman/SERVER/OpenServer/OpenServer/domains/muchmore/bitrix/components/tesset/about.reviews/class.php",
 		"/media/roman/SERVER/Projects/SeiNtex/bitrix/components/tesset/news.list/.parameters.php",
 		"/media/roman/SERVER/Projects/SeiNtex/.htaccess",
 		"/tmp/sublime-sftp-browse-1413396873/mapped/bitrix/templates/books/header.php",
 		"/tmp/fz3temp-1/.section.php",
-		"/media/roman/SERVER/Projects/SeiNtex/page_elements/header.php",
 		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/seintex_index/header.php",
 		"/media/roman/SERVER/Projects/SeiNtex/markup/index.php",
-		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/seintex_index/footer.php",
 		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/seintex_index/lang/en/description.php",
 		"/media/roman/SERVER/Projects/SeiNtex/bitrix/templates/seintex_index/lang/ru/description.php",
 		"/home/roman/.config/sublime-text-3/Packages/User/Preferences.sublime-settings",
 		"/home/roman/.config/sublime-text-3/Packages/User/SFTP.errors.log",
 		"/home/roman/Projects/SeiNtex/sftp-config.json",
-		"/tmp/fz3temp-1/template 3.php",
 		"/etc/sphinxsearch/sphinx.conf",
 		"/home/roman/Downloads/CocoDesign/classy/gallery.html",
 		"/tmp/fz3temp-1/DashboardController.php",
 		"/tmp/fz3temp-1/section.php",
 		"/tmp/fz3temp-1/element.php",
 		"/media/roman/FILES/=programming=/phpRepo/muchmore/src/javascript/custom.js",
-		"/tmp/fz3temp-1/template 2.php",
 		"/tmp/fz3temp-1/result_modifier 2.php",
 		"/tmp/fz3temp-1/registration.php",
 		"/tmp/fz3temp-1/index 3.php",
@@ -277,7 +277,7 @@
 	],
 	"find":
 	{
-		"height": 54.0
+		"height": 27.0
 	},
 	"find_in_files":
 	{
@@ -292,6 +292,18 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"make",
+			"APPLICATION",
+			"Список новостей",
+			"<?=$item['section']['SECTION_PAGE_URL']?>",
+			"GetItems",
+			"e']",
+			"<a class=\"blog-page-first\" href=",
+			"<a class=\"blog-page-previous\" href=\"",
+			"navComponentObject",
+			"nav",
+			"        $",
+			"active",
 			"')\n",
 			"    \n",
 			"DETAIL_TEXT",
@@ -359,24 +371,24 @@
 	"groups":
 	[
 		{
-			"selected": 5,
+			"selected": 0,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "bitrix/components/tesset/news.item/class.php",
+					"file": "bitrix/components/tesset/catalog.filter/class.php",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 5106,
+						"buffer_size": 3899,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								4449,
-								4449
+								580,
+								580
 							]
 						],
 						"settings":
@@ -389,84 +401,48 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 2964.0,
+						"translation.y": 228.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 5,
+					"stack_index": 0,
 					"type": "text"
 				},
 				{
 					"buffer": 1,
-					"file": "bitrix/components/tesset/news.item/templates/.default/template.php",
+					"file": "ajax/filter.ajax.php",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 1186,
+						"buffer_size": 1268,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								760,
-								760
+								1262,
+								1262
 							]
 						],
 						"settings":
 						{
 							"incomplete_sync": null,
-							"remote_loading": false,
-							"synced": false,
-							"syntax": "Packages/PHP/PHP.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
+							"syntax": "Packages/PHP/PHP.tmLanguage"
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 456.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 4,
+					"stack_index": 1,
 					"type": "text"
 				},
 				{
 					"buffer": 2,
-					"file": "index.php",
-					"semi_transient": false,
+					"file": "bitrix/components/tesset/catalog.filter/.parameters.php",
+					"semi_transient": true,
 					"settings":
 					{
-						"buffer_size": 13215,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								8490,
-								8490
-							]
-						],
-						"settings":
-						{
-							"incomplete_sync": null,
-							"remote_loading": false,
-							"synced": false,
-							"syntax": "Packages/PHP/PHP.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 3,
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "page_elements/header.php",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 6112,
+						"buffer_size": 1145,
 						"regions":
 						{
 						},
@@ -486,28 +462,28 @@
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
-						"translation.x": -0.0,
-						"translation.y": 855.0,
+						"translation.x": 0.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 2,
+					"stack_index": 3,
 					"type": "text"
 				},
 				{
-					"buffer": 4,
-					"file": "bitrix/templates/.default/components/bitrix/menu/top_2level/template.php",
+					"buffer": 3,
+					"file": "index.php",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 2940,
+						"buffer_size": 10315,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								2930,
-								2930
+								1503,
+								1503
 							]
 						],
 						"settings":
@@ -515,42 +491,15 @@
 							"incomplete_sync": null,
 							"remote_loading": false,
 							"synced": false,
-							"syntax": "Packages/PHP/PHP.tmLanguage"
+							"syntax": "Packages/PHP/PHP.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 925.0,
+						"translation.y": 1254.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 1,
-					"type": "text"
-				},
-				{
-					"buffer": 5,
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 165,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								165,
-								165
-							]
-						],
-						"settings":
-						{
-							"auto_name": "1. Подбор на главной",
-							"incomplete_sync": null,
-							"syntax": "Packages/Text/Plain text.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
+					"stack_index": 2,
 					"type": "text"
 				}
 			]
@@ -598,7 +547,7 @@
 	"project": "SeiNtex.sublime-project",
 	"replace":
 	{
-		"height": 102.0
+		"height": 50.0
 	},
 	"save_all_on_build": true,
 	"select_file":
@@ -606,6 +555,10 @@
 		"height": 0.0,
 		"selected_items":
 		[
+			[
+				"style",
+				"css/style.css"
+			]
 		],
 		"width": 0.0
 	},

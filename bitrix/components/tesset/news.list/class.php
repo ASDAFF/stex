@@ -76,6 +76,9 @@ class NewsListList extends CBitrixComponent
         $this->navParams = array(
             "nPageSize" => $this->arParams["ITEMS_COUNT"],
         );
+        if ($this->arParams['SORT']) {
+            $this->sort = $this->arParams['SORT'];
+        }
 
         return true;
     }

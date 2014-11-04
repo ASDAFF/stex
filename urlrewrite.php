@@ -1,6 +1,12 @@
 <?
 $arUrlRewrite = array(
 	array(
+		"CONDITION" => "#^/press-center/exibitions/([^\\/]*)/.*#",
+		"RULE" => "ELEMENT_CODE=\$1",
+		"ID" => "",
+		"PATH" => "/press-center/exibitions/item.php",
+	),
+	array(
 		"CONDITION" => "#^/press-center/news/([^\\/]*)/.*#",
 		"RULE" => "ELEMENT_CODE=\$1",
 		"ID" => "",

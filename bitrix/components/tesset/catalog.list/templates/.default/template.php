@@ -4,7 +4,9 @@
         <?=$arResult['section']['name']?>
     </h2>
     <?=$arResult['section']['description']?>
-    <?$APPLICATION->IncludeFile('/include/catalog.text.php');?>
+    <?if (!$_GET['filter'] && !$arParams['SECTION_CODE']) : ?>
+        <?$APPLICATION->IncludeFile('/include/catalog.text.php');?>
+    <?endif;?>
 </div>
 <div class="catalog-filter">
     <div class="catalog-filter-form">
@@ -66,7 +68,7 @@
         <div class="col-xs-4">
             <div class="catalog-item">
                 <div class="catalog-item__photo">
-                    <a href="<?=$item['url']?>"><img src="<?=$item['picture']['src']?>" alt=""></a>
+                    <a href="<?=$item['url']?>"><img src="<?=($item['picture']['src'])?$item['picture']['src']:$arResult['catalogSections'][$item['section']]['no_photo']?>" alt=""></a>
                 </div>
                 <div class="catalog-item__name">
                     <a href="<?=$item['url']?>">

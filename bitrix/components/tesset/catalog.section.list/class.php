@@ -28,7 +28,7 @@ class CatalogSectionList extends CBitrixComponent
      * @var array
      */
     private $sort = array(
-        'DATE_CREATE' => 'DESC'
+        'NAME' => 'ASC'
         );
 
     /**
@@ -97,7 +97,8 @@ class CatalogSectionList extends CBitrixComponent
     {
         $filter = array(    
             'IBLOCK_ID' => $this->arParams['IBLOCK_ID'],
-            'ACTIVE' => 'Y'
+            'ACTIVE' => 'Y',
+            'DEPTH_LEVEL' => 1
             // 'INCLUDE_SUBSECTIONS' => 'Y'
         );
         return $filter;

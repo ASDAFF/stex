@@ -46,6 +46,7 @@ class EvrikaBlogList extends CBitrixComponent
         'PROPERTY_PRICE',
         'PROPERTY_AVAILABILITY',
         'PROPERTY_PHOTOS',
+        'PROPERTY_ARTICUL',
         'PROPERTY_SHOP_LINK'
         );
 
@@ -176,6 +177,7 @@ class EvrikaBlogList extends CBitrixComponent
             'material' => $item->propValue('MATERIAL'),
             'features' => $item->propValue('FEATURES'),
             'price' => $item->propValue('PRICE'),
+            'articul' => $item->propValue('ARTICUL'),
             'availability' => $item->propValue('AVAILABILITY'),
             'shopLink' => $item->propValue('SHOP_LINK'),
             'url' => $item->field('DETAIL_PAGE_URL')
@@ -206,13 +208,14 @@ class EvrikaBlogList extends CBitrixComponent
             ])->GetNext();
         $obUserTypeEntity = new CUserTypeEntity;
         foreach ($x['section'] as $key => $info) {
-            if (strpos($key, 'UF_') !== false && strpos($key, '~') === false && $info) {
+            if (strpos($key, 'UF_') !== false && strpos($key, '~') === false && strpos($key, 'NO_PHOTO') === false && $info) {
                 $x['section']['properties'][$key] = [
                     'name' => CUserTypeEntity::GetByID($obUserTypeEntity->GetList(array(), array("FIELD_NAME" => $key))->Fetch()['ID'])['LIST_COLUMN_LABEL']['ru'],
                     'value' => $info
                 ];
             } 
         }
+        $x['section']['no_photo'] = CFile::GetPath($x['section']['UF_NO_PHOTO']);
         $x['make'] = CIBlockSection::GetList(false, [
             'ID' => $x['make']
             ], false, [

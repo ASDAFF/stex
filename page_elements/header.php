@@ -3,14 +3,7 @@
         <div class="row">
             <div class="col-xs-3">
                 <div class="logo">
-                    <a href="/">
-                        <img src="/img/seintext-logo.png" height="36" width="186" alt="">
-                    </a>
-                    <div class="logo__description">
-                        <span>
-                            производство автомобильных <br>аксессуаров
-                        </span>
-                    </div>
+                    <?$APPLICATION->IncludeFile('/include/header.logo.php');?>
                 </div>
             </div>
             <div class="col-xs-3">
@@ -28,12 +21,16 @@
                 </div> -->
             </div>
             <div class="col-xs-3">
-                <?$APPLICATION->InclideFile('/include/header.shop.button.php');?>
+                <a href="#" class="go-im-btn btn btn--red">
+                    <span>
+                        Интернет-магазин
+                    </span>
+                </a>
             </div>
             <div class="col-xs-3">
                 <div class="main-header__contacts">
                     <div class="main-header__contacts__phone">
-                       <span> +7 (495)</span> 223-23-04
+                        <?$APPLICATION->IncludeFile('/include/header.phone.php');?>
                     </div>
                     <div class="main-header__contacts__callback-btn">
                         <a href="#callback" class="popup btn--dotted">Заказать звонок</a>
@@ -115,10 +112,10 @@
                         </ul>
                     </li>
                 </ul> -->
-                <form class="navbar-form navbar-right" role="search">
+                <form class="navbar-form navbar-right" role="search" action="/search" method="GET">
                     <button type="submit" class="btn btn-default"></button>
                     <div class="form-group">
-                        <input type="text" class="form-control" placeholder="Поиск">
+                        <input type="text" class="form-control" name="q" placeholder="Поиск">
                     </div>
                     
                 </form>
